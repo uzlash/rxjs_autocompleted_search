@@ -1,4 +1,4 @@
-require('./connections/connection.mongo')();
+'use strict';
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -8,16 +8,28 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cors());
 
-app.get('/', (req, res) => {
-    res.status(200).json({ status: 'success', payload: { apiVersion: 1.0, writtenBy: 'LexClass Members', supervisedBy: 'Khalil Mohammed Shams <shamskhalil@gmail.com>', date: 'August 2020' }, message: 'Welcome to Lexclass REST API' });
+let store = ['Abubakar', 'Ahmad', 'Aisha', 'Ayush', 'Abdullahi', 'Abdulaziz', 'Abdulhakeem', 'Abdulalim'];
+
+app.get('/user', (req, res) => {
+    const {search} = req.query;
+    const result = doSearch(search);
+    res.status(200).json({ status: 'success', payload: result, message: 'Fetched successfully' });
 });
 
-//User Rooute
-const userRoute = require('./routes/route.user')();
-app.use('/api/v1/user', userRoute);
+app.use(express.static(__dirname + '/www'));
 
 app.listen(9000, () => {
-    console.log('User Microservice listening on port 9000')
+    console.log('Server listening on port 9000');
 });
+
+function doSearch(searchTerm) {
+   let temp = [];
+   store.forEach(obj => {
+       if(obj.startsWith(searchTerm)) {
+           temp.push(obj);
+       }
+   })
+   return temp;
+}
 
 module.exports.app = app;

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Compiled and minified CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+    />
+    <!--Import Google Icon Font-->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <!-- Compiled and minified JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.6.3/rxjs.umd.min.js"
+      integrity="sha512-JnZPWAckMDks0CCIeGznqEo7ifmYK7VowHq/NVFlSXGkwxv4OBCJFy7nouOtJZmVldHo7FQLIdeWTI55yyZc4Q=="
+      crossorigin="anonymous"
+    ></script>
+
+    <title>Auto Complete</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>RXJS Auto Complete Search</h1>
+      <input type="text" id="searchInput" placeholder="Search Here" />
+      <div id="output"></div>
+    </div>
+
+    <script>
+      const searchInput = document.getElementById("searchInput");
+      const output = document.getElementById("output");
+
+      const { from, fromEvent } = rxjs;
+      const { map, filter, pipe, debounceTime, switchMap } = rxjs.operators;
+
+      let request = (query) =>
+        fetch(
+          `https://jsonplaceholder.typicode.com/users?q=${query}`
+        ).then((data) => data.json());
+
+      let search$ = fromEvent(searchInput, "input").pipe(
+        //map basically maps over the current values with new values which have been manipluated
+        map((x) => x.target.value),
+        //decounce delays the time between when an action is carried out, in our case we delay the request by 250ms
+        debounceTime(250),
+        //filter takes in the input and only returns (fires), withe the filtered operation, in our case it only returns characters more than 2
+        filter((queryChar) => queryChar.length >= 2),
+        //switchmap emit the results from the most recently placed request
+        //switchmap creates an observable from a promise with from() which emits the results of the promise when it resolves
+        switchMap((value) => from(request(value)))
+      );
+
+      search$.subscribe((data) => {
+        while (output.firstChild) {
+          output.removeChild(output.firstChild);
+        }
+        data.map((user) => {
+          let newResult = document.createElement("li");
+          newResult.textContent = user.name;
+          output.appendChild(newResult);
+        });
+      });
+    </script>
+  </body>
+</html>
